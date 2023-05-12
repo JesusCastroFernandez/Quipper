@@ -1,0 +1,44 @@
+module DeutschJozsa where
+
+-- Importar las bibliotecas necesarias
+open Quipper
+
+-- Definir la función booleana
+bool_function :: ([Qubit], [Qubit]) -> Circ ([Qubit], [Qubit])
+bool_function (input, output) = do
+  -- Si la función es constante, aplicar la compuerta X a todos los qubits de salida
+  -- Si la función es balanceada, aplicar la compuerta X al último qubit de salida
+  control_all input (if output == head output:tail output then gate_X else gate_X `controlled` [last input])
+  return (input, output)
+
+-- Definir el circuito de Deutsch-Jozsa
+deutsch_jozsa :: ([Qubit], [Qubit]) -> Circ (Qubit, Qubit)
+deutsch_jozsa (input, output) = do
+  -- Crear los qubits de entrada y salida
+  let n = length input
+  input_qubits <- qinit input
+  output_qubits <- qinit output
+  
+  -- Aplicar la compuerta Hadamard a los qubits de entrada
+  hadamard_all input_qubits
+  
+  -- Aplicar la función booleana
+  (input_qubits', output_qubits') <- bool_function (input_qubits, output_qubits)
+  
+  -- Aplicar la compuerta Hadamard a los qubits de entrada
+  hadamard_all input_qubits
+  
+  -- Medir los qubits de entrada
+  input_measurements <- qmeasure input_qubits
+  
+  -- Devolver el resultado
+  let result = foldl1 xor input_measurements
+  return (result, qubit False)
+
+-- Ejecutar el circuito para una función constante
+constant_function = deutsch_jozsa (replicate 4 qubit False, replicate 4 qubit True)
+result1 = simulate constant_function
+
+-- Ejecutar el circuito para una función balanceada
+balanced_function = deutsch_jozsa ([qubit False, qubit True, qubit False, qubit True], [qubit True, qubit False, qubit True, qubit False])
+result2 = simulate balanced_function
