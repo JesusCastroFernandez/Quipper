@@ -28,6 +28,7 @@ deutsch_jozsa (input, output) = do
   -- Aplicar la compuerta Hadamard a los qubits de entrada
   hadamard_all input_qubits
   
+  
   -- Medir los qubits de entrada
   input_measurements <- qmeasure input_qubits
   
